@@ -2,6 +2,10 @@
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Project Plan
+
+The roadmap for the Twenty Four site is documented in [`PLAN.md`](./PLAN.md).
+
 ## Getting Started
 
 First, run the development server:
