@@ -25,21 +25,6 @@ const navItems = [
     megaMenu: "jerseys",
   },
   {
-    label: "CLEATS",
-    href: "/shop/footwear",
-    megaMenu: null,
-  },
-  {
-    label: "BALLS",
-    href: "/shop/gear",
-    megaMenu: null,
-  },
-  {
-    label: "TRAINING",
-    href: "/shop/gear",
-    megaMenu: null,
-  },
-  {
     label: "WORLD CUP 2026",
     href: "/shop/national-teams",
     megaMenu: null,
