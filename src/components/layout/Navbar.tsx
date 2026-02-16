@@ -93,7 +93,7 @@ export default function Navbar() {
 
             <div className="flex items-center gap-1 sm:gap-2">
               <Link
-                href="/login"
+                href="/account"
                 className="p-2 hover:bg-muted rounded-full transition-colors hidden sm:flex"
                 aria-label="Account"
               >

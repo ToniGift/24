@@ -5,6 +5,7 @@ import ShopByLeague from "@/components/home/ShopByLeague";
 import FeaturedPlayers from "@/components/home/FeaturedPlayers";
 import PromoBanner from "@/components/home/PromoBanner";
 import NewArrivals from "@/components/home/NewArrivals";
+import LoopShowcaseVideo from "@/components/home/LoopShowcaseVideo";
 import TrustBadges from "@/components/home/TrustBadges";
 
 export default function Home() {
@@ -13,6 +14,7 @@ export default function Home() {
       <HeroCarousel />
       <FeaturedCategories />
       <TrendingProducts />
+      <LoopShowcaseVideo />
       <ShopByLeague />
       <PromoBanner />
       <FeaturedPlayers />

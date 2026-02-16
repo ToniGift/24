@@ -3,18 +3,84 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, Lock, CreditCard, ShoppingBag } from "lucide-react";
+import { ArrowLeft, Lock, CreditCard, ShoppingBag, MessageCircle, Instagram } from "lucide-react";
 import { useCartStore } from "@/store/cart-store";
 import { formatPrice } from "@/lib/utils";
 import { getPrimaryProductImage } from "@/data/images";
+import { CustomerDetails, getWhatsAppCheckoutURL, copyOrderMessageToClipboard } from "@/lib/social-checkout";
 
 export default function CheckoutPage() {
-  const { items, getTotal } = useCartStore();
+  const { items, getTotal, clearCart } = useCartStore();
   const [step, setStep] = useState(1);
   const subtotal = getTotal();
   const shipping = subtotal >= 49 ? 0 : 9.99;
   const tax = subtotal * 0.08;
   const total = subtotal + shipping + tax;
+  
+  // Customer details state
+  const [customerDetails, setCustomerDetails] = useState<CustomerDetails>({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "",
+    state: "",
+    zipCode: "",
+    country: "Poland",
+    notifyNewDrops: false,
+  });
+  
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validateShippingInfo = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!customerDetails.firstName.trim()) newErrors.firstName = "First name is required";
+    if (!customerDetails.lastName.trim()) newErrors.lastName = "Last name is required";
+    if (!customerDetails.email.trim()) newErrors.email = "Email is required";
+    if (!customerDetails.phone.trim()) newErrors.phone = "Phone number is required";
+    if (!customerDetails.address.trim()) newErrors.address = "Address is required";
+    if (!customerDetails.city.trim()) newErrors.city = "City is required";
+    if (!customerDetails.country.trim()) newErrors.country = "Country is required";
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+  
+  const handleContinueToReview = () => {
+    if (validateShippingInfo()) {
+      setStep(2);
+    }
+  };
+  
+  const handleWhatsAppCheckout = () => {
+    // Your WhatsApp business number (replace with actual number)
+    const businessPhone = "48123456789"; // Example: Poland number
+    const url = getWhatsAppCheckoutURL(businessPhone, items, customerDetails, subtotal, shipping, tax, total);
+    window.open(url, "_blank");
+    
+    // Copy message to clipboard for Instagram
+    copyOrderMessageToClipboard(items, customerDetails, subtotal, shipping, tax, total);
+    
+    // Clear cart after order
+    setTimeout(() => clearCart(), 1000);
+  };
+  
+  const handleInstagramCheckout = () => {
+    // Copy order message to clipboard
+    copyOrderMessageToClipboard(items, customerDetails, subtotal, shipping, tax, total);
+    
+    // Your Instagram username (replace with actual username)
+    const instagramUsername = "24shop"; // Replace with your actual Instagram handle
+    window.open(`https://ig.me/m/${instagramUsername}`, "_blank");
+    
+    // Show instruction
+    alert("Order details copied to clipboard! Paste them in the Instagram DM.");
+    
+    // Clear cart after order
+    setTimeout(() => clearCart(), 1000);
+  };
 
   if (items.length === 0) {
     return (
@@ -45,7 +111,7 @@ export default function CheckoutPage() {
 
       {/* Steps */}
       <div className="flex items-center gap-4 mb-8">
-        {["Shipping", "Payment", "Review"].map((label, i) => (
+        {["Customer Info", "Review & Send"].map((label, i) => (
           <div key={label} className="flex items-center gap-2">
             <div
               className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
@@ -65,130 +131,177 @@ export default function CheckoutPage() {
             >
               {label}
             </span>
-            {i < 2 && <div className="w-8 md:w-16 h-px bg-border" />}
+            {i < 1 && <div className="w-8 md:w-16 h-px bg-border" />}
           </div>
         ))}
       </div>
 
       <div className="grid lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
-          {/* Step 1: Shipping */}
+          {/* Step 1: Customer Info */}
           {step === 1 && (
             <div className="bg-white border border-border rounded-xl p-6">
-              <h2 className="text-lg font-bold mb-6">Shipping Information</h2>
+              <h2 className="text-lg font-bold mb-6">Customer Information</h2>
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium block mb-1.5">First Name *</label>
-                  <input type="text" className="w-full px-3 py-2.5 border border-border rounded-lg outline-none focus:border-primary text-sm transition-colors" />
+                  <input
+                    type="text"
+                    value={customerDetails.firstName}
+                    onChange={(e) => setCustomerDetails({ ...customerDetails, firstName: e.target.value })}
+                    className={`w-full px-3 py-2.5 border rounded-lg outline-none focus:border-primary text-sm transition-colors ${
+                      errors.firstName ? "border-red-500" : "border-border"
+                    }`}
+                  />
+                  {errors.firstName && <p className="text-xs text-red-500 mt-1">{errors.firstName}</p>}
                 </div>
                 <div>
                   <label className="text-sm font-medium block mb-1.5">Last Name *</label>
-                  <input type="text" className="w-full px-3 py-2.5 border border-border rounded-lg outline-none focus:border-primary text-sm transition-colors" />
+                  <input
+                    type="text"
+                    value={customerDetails.lastName}
+                    onChange={(e) => setCustomerDetails({ ...customerDetails, lastName: e.target.value })}
+                    className={`w-full px-3 py-2.5 border rounded-lg outline-none focus:border-primary text-sm transition-colors ${
+                      errors.lastName ? "border-red-500" : "border-border"
+                    }`}
+                  />
+                  {errors.lastName && <p className="text-xs text-red-500 mt-1">{errors.lastName}</p>}
                 </div>
                 <div className="sm:col-span-2">
                   <label className="text-sm font-medium block mb-1.5">Email Address *</label>
-                  <input type="email" className="w-full px-3 py-2.5 border border-border rounded-lg outline-none focus:border-primary text-sm transition-colors" />
+                  <input
+                    type="email"
+                    value={customerDetails.email}
+                    onChange={(e) => setCustomerDetails({ ...customerDetails, email: e.target.value })}
+                    className={`w-full px-3 py-2.5 border rounded-lg outline-none focus:border-primary text-sm transition-colors ${
+                      errors.email ? "border-red-500" : "border-border"
+                    }`}
+                  />
+                  {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="text-sm font-medium block mb-1.5">Phone Number *</label>
+                  <input
+                    type="tel"
+                    placeholder="+48 123 456 789"
+                    value={customerDetails.phone}
+                    onChange={(e) => setCustomerDetails({ ...customerDetails, phone: e.target.value })}
+                    className={`w-full px-3 py-2.5 border rounded-lg outline-none focus:border-primary text-sm transition-colors ${
+                      errors.phone ? "border-red-500" : "border-border"
+                    }`}
+                  />
+                  {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
                 </div>
                 <div className="sm:col-span-2">
                   <label className="text-sm font-medium block mb-1.5">Street Address *</label>
-                  <input type="text" className="w-full px-3 py-2.5 border border-border rounded-lg outline-none focus:border-primary text-sm transition-colors" />
+                  <input
+                    type="text"
+                    value={customerDetails.address}
+                    onChange={(e) => setCustomerDetails({ ...customerDetails, address: e.target.value })}
+                    className={`w-full px-3 py-2.5 border rounded-lg outline-none focus:border-primary text-sm transition-colors ${
+                      errors.address ? "border-red-500" : "border-border"
+                    }`}
+                  />
+                  {errors.address && <p className="text-xs text-red-500 mt-1">{errors.address}</p>}
                 </div>
                 <div>
                   <label className="text-sm font-medium block mb-1.5">City *</label>
-                  <input type="text" className="w-full px-3 py-2.5 border border-border rounded-lg outline-none focus:border-primary text-sm transition-colors" />
+                  <input
+                    type="text"
+                    value={customerDetails.city}
+                    onChange={(e) => setCustomerDetails({ ...customerDetails, city: e.target.value })}
+                    className={`w-full px-3 py-2.5 border rounded-lg outline-none focus:border-primary text-sm transition-colors ${
+                      errors.city ? "border-red-500" : "border-border"
+                    }`}
+                  />
+                  {errors.city && <p className="text-xs text-red-500 mt-1">{errors.city}</p>}
                 </div>
                 <div>
-                  <label className="text-sm font-medium block mb-1.5">State *</label>
-                  <input type="text" className="w-full px-3 py-2.5 border border-border rounded-lg outline-none focus:border-primary text-sm transition-colors" />
+                  <label className="text-sm font-medium block mb-1.5">State / Province</label>
+                  <input
+                    type="text"
+                    value={customerDetails.state}
+                    onChange={(e) => setCustomerDetails({ ...customerDetails, state: e.target.value })}
+                    className="w-full px-3 py-2.5 border border-border rounded-lg outline-none focus:border-primary text-sm transition-colors"
+                  />
                 </div>
                 <div>
-                  <label className="text-sm font-medium block mb-1.5">ZIP Code *</label>
-                  <input type="text" className="w-full px-3 py-2.5 border border-border rounded-lg outline-none focus:border-primary text-sm transition-colors" />
+                  <label className="text-sm font-medium block mb-1.5">ZIP / Postal Code</label>
+                  <input
+                    type="text"
+                    value={customerDetails.zipCode}
+                    onChange={(e) => setCustomerDetails({ ...customerDetails, zipCode: e.target.value })}
+                    className="w-full px-3 py-2.5 border border-border rounded-lg outline-none focus:border-primary text-sm transition-colors"
+                  />
                 </div>
                 <div>
                   <label className="text-sm font-medium block mb-1.5">Country *</label>
-                  <select className="w-full px-3 py-2.5 border border-border rounded-lg outline-none focus:border-primary text-sm transition-colors bg-white">
-                    <option>United States</option>
-                    <option>Canada</option>
-                    <option>United Kingdom</option>
-                    <option>Germany</option>
-                    <option>France</option>
-                    <option>Spain</option>
-                    <option>Italy</option>
-                    <option>Brazil</option>
-                    <option>Mexico</option>
-                    <option>Argentina</option>
+                  <select
+                    value={customerDetails.country}
+                    onChange={(e) => setCustomerDetails({ ...customerDetails, country: e.target.value })}
+                    className={`w-full px-3 py-2.5 border rounded-lg outline-none focus:border-primary text-sm transition-colors bg-white ${
+                      errors.country ? "border-red-500" : "border-border"
+                    }`}
+                  >
+                    <option value="Poland">Poland</option>
+                    <option value="Germany">Germany</option>
+                    <option value="France">France</option>
+                    <option value="Spain">Spain</option>
+                    <option value="Italy">Italy</option>
+                    <option value="United Kingdom">United Kingdom</option>
+                    <option value="United States">United States</option>
+                    <option value="Canada">Canada</option>
+                    <option value="Brazil">Brazil</option>
+                    <option value="Argentina">Argentina</option>
+                    <option value="Mexico">Mexico</option>
                   </select>
+                  {errors.country && <p className="text-xs text-red-500 mt-1">{errors.country}</p>}
                 </div>
-                <div className="sm:col-span-2">
-                  <label className="text-sm font-medium block mb-1.5">Phone Number</label>
-                  <input type="tel" className="w-full px-3 py-2.5 border border-border rounded-lg outline-none focus:border-primary text-sm transition-colors" />
+                <div className="sm:col-span-2 mt-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={customerDetails.notifyNewDrops}
+                      onChange={(e) => setCustomerDetails({ ...customerDetails, notifyNewDrops: e.target.checked })}
+                      className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
+                    />
+                    <span className="text-sm text-muted-foreground">
+                      🔔 Notify me on WhatsApp about new product drops and exclusive offers
+                    </span>
+                  </label>
                 </div>
               </div>
               <button
-                onClick={() => setStep(2)}
+                onClick={handleContinueToReview}
                 className="w-full mt-6 bg-primary text-white py-3.5 rounded-lg font-bold hover:bg-primary-dark transition-colors"
               >
-                Continue to Payment
+                Review Order
               </button>
             </div>
           )}
 
-          {/* Step 2: Payment */}
+          {/* Step 2: Review */}
           {step === 2 && (
             <div className="bg-white border border-border rounded-xl p-6">
-              <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
-                <Lock className="w-5 h-5 text-green-600" />
-                Payment Information
-              </h2>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium block mb-1.5">Card Number *</label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="1234 5678 9012 3456"
-                      className="w-full px-3 py-2.5 border border-border rounded-lg outline-none focus:border-primary text-sm transition-colors pr-10"
-                    />
-                    <CreditCard className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  </div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium block mb-1.5">Name on Card *</label>
-                  <input type="text" className="w-full px-3 py-2.5 border border-border rounded-lg outline-none focus:border-primary text-sm transition-colors" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium block mb-1.5">Expiry Date *</label>
-                    <input type="text" placeholder="MM/YY" className="w-full px-3 py-2.5 border border-border rounded-lg outline-none focus:border-primary text-sm transition-colors" />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium block mb-1.5">CVV *</label>
-                    <input type="text" placeholder="123" className="w-full px-3 py-2.5 border border-border rounded-lg outline-none focus:border-primary text-sm transition-colors" />
-                  </div>
-                </div>
-              </div>
-              <div className="flex gap-3 mt-6">
-                <button
-                  onClick={() => setStep(1)}
-                  className="px-6 py-3.5 border border-border rounded-lg font-semibold text-sm hover:bg-muted transition-colors"
-                >
-                  Back
-                </button>
-                <button
-                  onClick={() => setStep(3)}
-                  className="flex-1 bg-primary text-white py-3.5 rounded-lg font-bold hover:bg-primary-dark transition-colors"
-                >
-                  Review Order
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Step 3: Review */}
-          {step === 3 && (
-            <div className="bg-white border border-border rounded-xl p-6">
               <h2 className="text-lg font-bold mb-6">Review Your Order</h2>
+              
+              {/* Customer Details Summary */}
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <h3 className="text-sm font-bold mb-2">Shipping To:</h3>
+                <p className="text-sm text-muted-foreground">
+                  {customerDetails.firstName} {customerDetails.lastName}
+                </p>
+                <p className="text-sm text-muted-foreground">{customerDetails.email}</p>
+                <p className="text-sm text-muted-foreground">{customerDetails.phone}</p>
+                <p className="text-sm text-muted-foreground">
+                  {customerDetails.address}, {customerDetails.city}
+                  {customerDetails.state && `, ${customerDetails.state}`}
+                  {customerDetails.zipCode && ` ${customerDetails.zipCode}`}
+                </p>
+                <p className="text-sm text-muted-foreground">{customerDetails.country}</p>
+              </div>
+              
+              {/* Order Items */}
               <div className="space-y-4 mb-6">
                 {items.map((item) => (
                   <div key={`${item.product.id}-${item.size}`} className="flex gap-4 pb-4 border-b border-border last:border-0">
@@ -206,6 +319,11 @@ export default function CheckoutPage() {
                       <p className="text-xs text-muted-foreground">
                         Size: {item.size} | Qty: {item.quantity}
                       </p>
+                      {item.customName && item.customNumber && (
+                        <p className="text-xs text-primary font-medium mt-1">
+                          ⚽ Custom: {item.customName} #{item.customNumber}
+                        </p>
+                      )}
                     </div>
                     <p className="text-sm font-bold">
                       {formatPrice((item.product.salePrice || item.product.price) * item.quantity)}
@@ -213,21 +331,54 @@ export default function CheckoutPage() {
                   </div>
                 ))}
               </div>
-              <div className="flex gap-3">
+              
+              {/* Order Summary */}
+              <div className="bg-gray-50 rounded-lg p-4 mb-6 space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className="font-medium">{formatPrice(subtotal)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Shipping</span>
+                  <span className="font-medium">{shipping === 0 ? <span className="text-green-600">FREE</span> : formatPrice(shipping)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Tax</span>
+                  <span className="font-medium">{formatPrice(tax)}</span>
+                </div>
+                <div className="border-t border-border pt-2 flex justify-between">
+                  <span className="font-bold">Total</span>
+                  <span className="font-bold text-lg">{formatPrice(total)}</span>
+                </div>
+              </div>
+              
+              {/* Social Checkout Buttons */}
+              <div className="space-y-3">
                 <button
-                  onClick={() => setStep(2)}
-                  className="px-6 py-3.5 border border-border rounded-lg font-semibold text-sm hover:bg-muted transition-colors"
+                  onClick={handleWhatsAppCheckout}
+                  className="w-full bg-green-500 hover:bg-green-600 text-white py-4 rounded-lg font-bold transition-colors flex items-center justify-center gap-2"
                 >
-                  Back
+                  <MessageCircle className="w-5 h-5" />
+                  Send Order on WhatsApp
                 </button>
                 <button
-                  onClick={() => alert("Order placed! (Demo)")}
-                  className="flex-1 bg-primary text-white py-3.5 rounded-lg font-bold hover:bg-primary-dark transition-colors flex items-center justify-center gap-2"
+                  onClick={handleInstagramCheckout}
+                  className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white py-4 rounded-lg font-bold transition-colors flex items-center justify-center gap-2"
                 >
-                  <Lock className="w-4 h-4" />
-                  Place Order - {formatPrice(total)}
+                  <Instagram className="w-5 h-5" />
+                  Send Order on Instagram
+                </button>
+                <button
+                  onClick={() => setStep(1)}
+                  className="w-full py-3 border border-border rounded-lg font-semibold text-sm hover:bg-muted transition-colors"
+                >
+                  ← Edit Information
                 </button>
               </div>
+              
+              <p className="text-xs text-center text-muted-foreground mt-4">
+                Click above to send your order via WhatsApp or Instagram DM. We&apos;ll confirm and provide payment details.
+              </p>
             </div>
           )}
         </div>

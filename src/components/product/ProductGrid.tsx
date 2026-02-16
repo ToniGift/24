@@ -26,6 +26,8 @@ const sortOptions = [
   { label: "Price: Low to High", value: "price-asc" },
   { label: "Price: High to Low", value: "price-desc" },
   { label: "Best Rated", value: "rating" },
+  { label: "Team (A-Z)", value: "team-asc" },
+  { label: "Team (Z-A)", value: "team-desc" },
 ];
 
 const ITEMS_PER_PAGE = 12;
@@ -89,6 +91,20 @@ export default function ProductGrid({
         break;
       case "rating":
         result.sort((a, b) => b.rating - a.rating);
+        break;
+      case "team-asc":
+        result.sort((a, b) => {
+          const teamA = a.club || a.nationalTeam || "";
+          const teamB = b.club || b.nationalTeam || "";
+          return teamA.localeCompare(teamB);
+        });
+        break;
+      case "team-desc":
+        result.sort((a, b) => {
+          const teamA = a.club || a.nationalTeam || "";
+          const teamB = b.club || b.nationalTeam || "";
+          return teamB.localeCompare(teamA);
+        });
         break;
       default:
         result.sort((a, b) => (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0));
