@@ -6,6 +6,7 @@ import { Search, User, ShoppingBag, Heart, Menu, X, ChevronDown } from "lucide-r
 import { useCartStore } from "@/store/cart-store";
 import MegaMenu from "./MegaMenu";
 import SearchModal from "./SearchModal";
+import CurrencySelector from "./CurrencySelector";
 
 const navItems = [
   {
@@ -92,6 +93,7 @@ export default function Navbar() {
             </Link>
 
             <div className="flex items-center gap-1 sm:gap-2">
+              <CurrencySelector />
               <Link
                 href="/account"
                 className="p-2 hover:bg-muted rounded-full transition-colors hidden sm:flex"
@@ -172,13 +174,19 @@ export default function Navbar() {
                   {item.label}
                 </Link>
               ))}
-              <div className="pt-4 border-t border-border flex gap-4">
-                <Link href="/login" className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
-                  <User className="w-4 h-4" /> Account
-                </Link>
-                <Link href="/wishlist" className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
-                  <Heart className="w-4 h-4" /> Wishlist
-                </Link>
+              <div className="pt-4 border-t border-border space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-muted-foreground">Currency:</span>
+                  <CurrencySelector />
+                </div>
+                <div className="flex gap-4">
+                  <Link href="/account" className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
+                    <User className="w-4 h-4" /> Account
+                  </Link>
+                  <Link href="/wishlist" className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
+                    <Heart className="w-4 h-4" /> Wishlist
+                  </Link>
+                </div>
               </div>
             </nav>
           </div>
