@@ -9,16 +9,21 @@ All features from the plan have been successfully implemented. The site is now r
 ## 🎯 Features Delivered
 
 ### 1. Multi-Currency Pricing System ✅
+**Files Created:**
+- `src/components/layout/CurrencySelector.tsx` - Currency dropdown component
+
 **Files Updated:**
 - `src/lib/utils.ts` - Added EUR/USD/PLN currency support with conversion rates
+- `src/components/layout/Navbar.tsx` - Added currency selector to navbar
 - Default currency: **EUR** (as specified)
 - Prices automatically convert based on selected currency
 - Uses proper locale formatting for each currency
 
 **How to change currency:**
-- The system defaults to EUR
-- Currency rates are defined in `CURRENCY_RATES` object
-- Can be extended with currency selector UI in future
+- Click the currency selector in the top navbar (desktop or mobile)
+- Choose between EUR (€), USD ($), or PLN (zł)
+- All prices update instantly across the site
+- Currency preference saved in browser localStorage
 
 ---
 
@@ -186,6 +191,7 @@ Before launching, update these values:
 ### Created:
 - `src/lib/social-checkout.ts` - Order message formatting
 - `src/components/home/LoopShowcaseVideo.tsx` - Video showcase
+- `src/components/layout/CurrencySelector.tsx` - Currency switcher UI
 - `src/app/account/page.tsx` - Owner operations dashboard
 - `IMPLEMENTATION_SUMMARY.md` - This file
 
@@ -194,7 +200,7 @@ Before launching, update these values:
 - `src/components/product/ProductGrid.tsx` - Team sorting
 - `src/app/checkout/page.tsx` - Social checkout system
 - `src/app/page.tsx` - Added video section
-- `src/components/layout/Navbar.tsx` - Account link
+- `src/components/layout/Navbar.tsx` - Account link + currency selector
 
 ---
 
